@@ -27,6 +27,10 @@ function PokeCard({ pokemon, coins, updateCoins, onUpdatePokemon }) {
 
   // Função para calcular o nível baseado na experiência
   const calculateLevel = (exp) => {
+    // If the pokemon already has a level property, use it directly
+    if (pokemon.level) return pokemon.level;
+
+    // Otherwise calculate from experience
     if (!exp) return 1;
     let level = 1;
     let xpForNextLevel = 100;

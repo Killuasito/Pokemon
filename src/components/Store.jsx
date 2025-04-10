@@ -212,6 +212,74 @@ function Store({
     ];
   };
 
+  // Function to determine starting level based on Pokémon attributes and pack type
+  const determineStartingLevel = (pokemonId, isLegendary, packType) => {
+    // Base level ranges by pack type
+    const levelRanges = {
+      basic: { min: 5, max: 15 },
+      advanced: { min: 10, max: 25 },
+      legendary: { min: 15, max: 35 },
+      master: { min: 20, max: 45 },
+    };
+
+    let baseLevel = Math.floor(
+      Math.random() *
+        (levelRanges[packType].max - levelRanges[packType].min + 1) +
+        levelRanges[packType].min
+    );
+
+    // Legendary Pokémon get a significant level boost
+    if (isLegendary) {
+      baseLevel += Math.floor(Math.random() * 15) + 10; // +10-25 levels
+    }
+
+    // Pseudo-legendary Pokémon get a moderate boost
+    if (PSEUDO_LEGENDARY_IDS.includes(pokemonId)) {
+      baseLevel += Math.floor(Math.random() * 10) + 5; // +5-15 levels
+    }
+
+    // Higher generation Pokémon tend to start at higher levels
+    if (pokemonId > 649) {
+      // Gen 6+
+      baseLevel += Math.floor(Math.random() * 5) + 3;
+    } else if (pokemonId > 493) {
+      // Gen 5
+      baseLevel += Math.floor(Math.random() * 4) + 2;
+    } else if (pokemonId > 386) {
+      // Gen 4
+      baseLevel += Math.floor(Math.random() * 3) + 1;
+    }
+
+    // Some specific Pokémon that are typically found at higher levels
+    const highLevelPokemon = [130, 149, 248, 373, 376, 445, 635, 706, 784, 887]; // Gyarados, Dragonite, etc.
+    if (highLevelPokemon.includes(pokemonId)) {
+      baseLevel += Math.floor(Math.random() * 8) + 5;
+    }
+
+    // Baby Pokémon are typically lower level
+    const babyPokemon = [
+      172, 173, 174, 175, 236, 238, 239, 240, 298, 360, 406, 433, 438, 439, 440,
+      446, 447,
+    ];
+    if (babyPokemon.includes(pokemonId)) {
+      baseLevel = Math.floor(baseLevel * 0.7); // 70% of calculated level
+      baseLevel = Math.max(baseLevel, 5); // Minimum level 5
+    }
+
+    // Cap the level
+    const maxLevel = isLegendary ? 65 : 55;
+    return Math.min(baseLevel, maxLevel);
+  };
+
+  // Function to convert level to experience points
+  const levelToExperiencePoints = (level) => {
+    let totalExp = 0;
+    for (let i = 1; i < level; i++) {
+      totalExp += 100 * i;
+    }
+    return totalExp;
+  };
+
   const openPack = async (packType) => {
     const packConfig = PACK_TYPES[packType];
     if (coins < packConfig.cost) {
@@ -272,6 +340,10 @@ function Store({
           })
         );
 
+        // Determine the starting level and calculate corresponding experience
+        const startingLevel = determineStartingLevel(id, isLegendary, packType);
+        const experiencePoints = levelToExperiencePoints(startingLevel);
+
         newPack.push({
           id: data.id,
           name: data.name,
@@ -285,6 +357,8 @@ function Store({
           })),
           moves: moves,
           isLegendary: isLegendary,
+          exp: experiencePoints, // Add experience points based on level
+          level: startingLevel, // Add the level directly for display purposes
         });
       }
 

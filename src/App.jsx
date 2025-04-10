@@ -301,40 +301,42 @@ function App() {
         {/* Tutorial Modal */}
         {showTutorial && (
           <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl p-6 max-w-3xl w-[90%] animate-fade-up shadow-2xl">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <div className="bg-white rounded-xl p-4 sm:p-6 max-w-3xl w-[95%] sm:w-[90%] animate-fade-up shadow-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-3 sm:mb-4">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-1 sm:gap-2">
                   <FaInfoCircle className="text-blue-500" />
-                  {tutorialSteps[tutorialStep].title}
+                  <span className="line-clamp-1">
+                    {tutorialSteps[tutorialStep].title}
+                  </span>
                 </h2>
                 {tutorialStep === tutorialSteps.length - 1 && (
-                  <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                  <div className="bg-green-100 text-green-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1">
                     <FaCheck /> Final
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="w-full md:w-1/2 bg-gray-100 rounded-xl p-3 flex items-center justify-center">
+              <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
+                <div className="w-full md:w-1/2 bg-gray-100 rounded-lg sm:rounded-xl p-2 sm:p-3 flex items-center justify-center">
                   <img
                     src={tutorialSteps[tutorialStep].image}
                     alt="Tutorial illustration"
-                    className="max-h-64 object-contain mx-auto"
+                    className="h-36 sm:max-h-64 object-contain mx-auto"
                   />
                 </div>
 
                 <div className="w-full md:w-1/2">
-                  <p className="text-gray-700 mb-6 leading-relaxed">
+                  <p className="text-gray-700 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">
                     {tutorialSteps[tutorialStep].content}
                   </p>
 
                   {tutorialStep === 0 && (
-                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 text-sm">
+                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-2 sm:p-4 mb-4 sm:mb-6 text-xs sm:text-sm">
                       <div className="flex">
                         <div className="flex-shrink-0">
                           <FaCoins className="text-yellow-500" />
                         </div>
-                        <div className="ml-3">
+                        <div className="ml-2 sm:ml-3">
                           <p className="text-yellow-700">
                             Você começará com{" "}
                             <span className="font-bold">1000 moedas</span> para
@@ -347,12 +349,12 @@ function App() {
                   )}
 
                   {tutorialStep === 1 && (
-                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 text-sm">
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-2 sm:p-4 mb-4 sm:mb-6 text-xs sm:text-sm">
                       <div className="flex">
                         <div className="flex-shrink-0">
                           <FaMapMarkedAlt className="text-blue-500" />
                         </div>
-                        <div className="ml-3">
+                        <div className="ml-2 sm:ml-3">
                           <p className="text-blue-700">
                             <span className="font-bold">Dica:</span> Comece
                             comprando o Pacote Básico na loja para conseguir
@@ -369,25 +371,25 @@ function App() {
                         {tutorialStep > 0 && (
                           <button
                             onClick={() => setTutorialStep(tutorialStep - 1)}
-                            className="px-4 py-2 flex items-center gap-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            className="px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-1 sm:gap-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-xs sm:text-sm"
                           >
                             <FaArrowLeft /> Anterior
                           </button>
                         )}
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-1 sm:gap-2">
                         {tutorialStep < tutorialSteps.length - 1 ? (
                           <button
                             onClick={() => setTutorialStep(tutorialStep + 1)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                           >
                             Próximo <FaArrowRight />
                           </button>
                         ) : (
                           <button
                             onClick={handleCloseTutorial}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                           >
                             Começar jornada <FaCheck />
                           </button>
@@ -396,7 +398,7 @@ function App() {
                         {tutorialStep < tutorialSteps.length - 1 && (
                           <button
                             onClick={handleCloseTutorial}
-                            className="px-4 py-2 text-gray-500 hover:text-gray-700"
+                            className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-500 hover:text-gray-700 text-xs sm:text-sm"
                           >
                             Pular
                           </button>
@@ -407,16 +409,16 @@ function App() {
                 </div>
               </div>
 
-              <div className="flex justify-center mt-6">
+              <div className="flex justify-center mt-4 sm:mt-6">
                 <div className="flex gap-1">
                   {tutorialSteps.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => setTutorialStep(index)}
-                      className={`h-2 rounded-full transition-all ${
+                      className={`h-1.5 sm:h-2 rounded-full transition-all ${
                         index === tutorialStep
-                          ? "w-6 bg-blue-600"
-                          : "w-2 bg-gray-300 hover:bg-gray-400"
+                          ? "w-4 sm:w-6 bg-blue-600"
+                          : "w-1.5 sm:w-2 bg-gray-300 hover:bg-gray-400"
                       }`}
                     ></button>
                   ))}

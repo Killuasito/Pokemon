@@ -510,25 +510,25 @@ function PokeDetails({
     >
       {isEvolving ? (
         <div
-          className="relative w-[85%] max-w-2xl animate-fade-up z-10"
+          className="relative w-[90%] max-w-2xl animate-fade-up z-10"
           onClick={handleModalContentClick}
         >
-          <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-6 text-center text-white shadow-xl relative overflow-hidden">
+          <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-4 sm:p-6 text-center text-white shadow-xl relative overflow-hidden">
             {renderSparkles()}
 
-            <h2 className="text-2xl font-bold mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
               {evolutionStage === 0 && "Preparando Evolução..."}
               {evolutionStage === 1 && "Evoluindo!"}
               {evolutionStage === 2 && "Evolução Completa!"}
             </h2>
 
-            <p className="mb-6">
+            <p className="mb-4 sm:mb-6 text-sm sm:text-base">
               {evolutionCompleted
                 ? `${pokemon.name} evoluiu para ${evolutionResult?.name}!`
                 : `Seu ${pokemon.name} está evoluindo...`}
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
               <div
                 className={`flex flex-col items-center transition-all duration-1000 ${
                   evolutionStage >= 1 ? "opacity-40 scale-90" : "opacity-100"
@@ -542,7 +542,7 @@ function PokeDetails({
                   <img
                     src={pokemon.image}
                     alt={pokemon.name}
-                    className={`w-40 h-40 object-contain ${
+                    className={`w-24 h-24 sm:w-40 sm:h-40 object-contain ${
                       evolutionStage === 0 ? "animate-float" : ""
                     }`}
                   />
@@ -550,10 +550,12 @@ function PokeDetails({
                     <div className="absolute inset-0 bg-white/30 rounded-full blur-xl animate-pulse"></div>
                   )}
                 </div>
-                <p className="mt-2 font-semibold capitalize">{pokemon.name}</p>
+                <p className="mt-1 sm:mt-2 font-semibold capitalize text-xs sm:text-base">
+                  {pokemon.name}
+                </p>
               </div>
 
-              <div className="text-4xl">
+              <div className="text-2xl sm:text-4xl">
                 <FaArrowRight
                   className={evolutionStage === 1 ? "animate-pulse" : ""}
                 />
@@ -569,7 +571,7 @@ function PokeDetails({
                     <img
                       src={evolutionResult.image}
                       alt={evolutionResult.name}
-                      className={`w-40 h-40 object-contain ${
+                      className={`w-24 h-24 sm:w-40 sm:h-40 object-contain ${
                         evolutionStage === 2
                           ? "animate-evolve"
                           : "animate-pulse"
@@ -579,7 +581,7 @@ function PokeDetails({
                       <div className="absolute inset-0 bg-white/30 rounded-full blur-xl animate-pulse"></div>
                     )}
                   </div>
-                  <p className="mt-2 font-semibold capitalize">
+                  <p className="mt-1 sm:mt-2 font-semibold capitalize text-xs sm:text-base">
                     {evolutionResult.name}
                   </p>
                 </div>
@@ -587,20 +589,22 @@ function PokeDetails({
             </div>
 
             {evolutionStage === 2 && (
-              <div className="mt-8 bg-white/20 rounded-lg p-4 backdrop-blur-sm">
-                <h3 className="text-xl font-bold mb-3">Evolução Concluída!</h3>
+              <div className="mt-4 sm:mt-8 bg-white/20 rounded-lg p-3 sm:p-4 backdrop-blur-sm">
+                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">
+                  Evolução Concluída!
+                </h3>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-white/10 p-3 rounded-lg">
-                    <p className="text-sm opacity-80">Recompensa</p>
-                    <p className="font-bold flex items-center justify-center">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
+                  <div className="bg-white/10 p-2 sm:p-3 rounded-lg">
+                    <p className="text-xs sm:text-sm opacity-80">Recompensa</p>
+                    <p className="font-bold flex items-center justify-center text-sm sm:text-base">
                       <FaCoins className="text-yellow-300 mr-1" /> +100 moedas
                     </p>
                   </div>
 
-                  <div className="bg-white/10 p-3 rounded-lg">
-                    <p className="text-sm opacity-80">Status</p>
-                    <p className="font-bold flex items-center justify-center">
+                  <div className="bg-white/10 p-2 sm:p-3 rounded-lg">
+                    <p className="text-xs sm:text-sm opacity-80">Status</p>
+                    <p className="font-bold flex items-center justify-center text-sm sm:text-base">
                       <FaArrowRight className="text-green-300 mr-1" />{" "}
                       Aumentados
                     </p>
@@ -609,7 +613,7 @@ function PokeDetails({
 
                 <button
                   onClick={handleFinishEvolution}
-                  className="bg-white text-purple-700 px-6 py-2 rounded-lg font-bold hover:bg-purple-100 transition-all w-full flex items-center justify-center gap-2"
+                  className="bg-white text-purple-700 px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-bold hover:bg-purple-100 transition-all w-full flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   <FaCheck /> Continuar
                 </button>
@@ -617,8 +621,8 @@ function PokeDetails({
             )}
 
             {evolutionStage < 2 && (
-              <div className="mt-6">
-                <div className="w-full bg-white/20 h-3 rounded-full overflow-hidden">
+              <div className="mt-4 sm:mt-6">
+                <div className="w-full bg-white/20 h-2 sm:h-3 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-white animate-pulse"
                     style={{
@@ -631,7 +635,7 @@ function PokeDetails({
                     }}
                   ></div>
                 </div>
-                <p className="mt-2 text-sm">
+                <p className="mt-1 sm:mt-2 text-xs sm:text-sm">
                   {evolutionStage === 0 && "Iniciando processo de evolução..."}
                   {evolutionStage === 1 && "Transformando..."}
                 </p>
@@ -641,18 +645,18 @@ function PokeDetails({
         </div>
       ) : (
         <div
-          className="relative w-[85%] max-w-2xl animate-fade-up"
+          className="relative w-[95%] sm:w-[85%] max-w-2xl animate-fade-up max-h-[85vh]"
           onClick={handleModalContentClick}
         >
           <div
-            className={`bg-gradient-to-br ${typeColors[mainType]} rounded-t-2xl p-6 flex justify-center relative`}
+            className={`bg-gradient-to-br ${typeColors[mainType]} rounded-t-2xl p-3 sm:p-6 flex justify-center relative`}
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-white hover:bg-white/20 p-1.5 rounded-full transition-colors"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-white hover:bg-white/20 p-1 sm:p-1.5 rounded-full transition-colors"
             >
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5 sm:w-6 sm:h-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -666,24 +670,24 @@ function PokeDetails({
               </svg>
             </button>
 
-            <div className="flex flex-col items-center sm:flex-row sm:items-center gap-6">
+            <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2 sm:gap-6">
               <img
                 src={pokemon.image}
                 alt={pokemon.name}
-                className="w-40 h-40 object-contain drop-shadow-2xl animate-float"
+                className="w-28 h-28 sm:w-40 sm:h-40 object-contain drop-shadow-2xl animate-float"
               />
               <div className="text-white text-center sm:text-left">
-                <p className="text-sm font-semibold opacity-90">
+                <p className="text-xs sm:text-sm font-semibold opacity-90">
                   #{String(pokemon.id).padStart(3, "0")}
                 </p>
-                <h2 className="text-3xl font-bold capitalize mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold capitalize mb-1 sm:mb-2">
                   {pokemon.name}
                 </h2>
-                <div className="flex gap-2 justify-center sm:justify-start flex-wrap">
+                <div className="flex gap-1 sm:gap-2 justify-center sm:justify-start flex-wrap">
                   {pokemon.types?.map((type, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 rounded-full bg-white/20 text-sm font-medium backdrop-blur-sm"
+                      className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/20 text-xs sm:text-sm font-medium backdrop-blur-sm"
                     >
                       {type}
                     </span>
@@ -693,27 +697,29 @@ function PokeDetails({
             </div>
           </div>
 
-          <div className="bg-white rounded-b-2xl p-6 shadow-xl max-h-[60vh] overflow-y-auto">
+          <div className="bg-white rounded-b-2xl p-3 sm:p-6 shadow-xl max-h-[60vh] overflow-y-auto">
             {evolutionData && (
-              <div className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-100">
-                <h3 className="font-bold text-gray-800 mb-2">Evolução</h3>
+              <div className="mb-4 sm:mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 p-3 sm:p-4 rounded-lg border border-indigo-100">
+                <h3 className="font-bold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">
+                  Evolução
+                </h3>
 
                 {calculateLevel(pokemon.exp || 0) < evolutionData.level ? (
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 text-xs sm:text-sm">
                     Este Pokémon pode evoluir no nível {evolutionData.level}.
                     <br />
-                    <span className="text-sm font-medium text-indigo-600">
+                    <span className="text-xs font-medium text-indigo-600">
                       Atual: Nível {calculateLevel(pokemon.exp || 0)}
                     </span>
                   </p>
                 ) : (
                   <div>
-                    <p className="text-green-600 font-medium mb-2">
+                    <p className="text-green-600 font-medium mb-1 sm:mb-2 text-xs sm:text-sm">
                       Seu {pokemon.name} está pronto para evoluir!
                     </p>
                     <button
                       onClick={handleEvolveClick}
-                      className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-2 rounded-lg font-bold hover:from-indigo-600 hover:to-purple-600 transition-all"
+                      className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-1.5 sm:py-2 rounded-lg font-bold hover:from-indigo-600 hover:to-purple-600 transition-all text-xs sm:text-sm"
                     >
                       Evoluir Agora!
                     </button>
@@ -722,51 +728,55 @@ function PokeDetails({
               </div>
             )}
 
-            <div className="mb-6">
+            <div className="mb-3 sm:mb-6">
               <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
                   Nível {pokemon.level || 1}
                 </h3>
-                <span className="text-sm text-gray-600">
+                <span className="text-xs sm:text-sm text-gray-600">
                   {xpProgress.currentXp}/{xpProgress.requiredXp} XP
                 </span>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-1">
+              <div className="h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden mt-1">
                 <div
                   className="h-full bg-indigo-500 transition-all duration-500"
                   style={{ width: `${xpProgress.percentage}%` }}
                 ></div>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
                 Total de XP: {pokemon.exp || 0}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <p className="text-sm text-gray-500">Height</p>
-                <p className="font-semibold">{pokemon.height / 10}m</p>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-6">
+              <div className="bg-gray-50 rounded-lg p-2 sm:p-3 text-center">
+                <p className="text-xs sm:text-sm text-gray-500">Height</p>
+                <p className="font-semibold text-xs sm:text-base">
+                  {pokemon.height / 10}m
+                </p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <p className="text-sm text-gray-500">Weight</p>
-                <p className="font-semibold">{pokemon.weight / 10}kg</p>
+              <div className="bg-gray-50 rounded-lg p-2 sm:p-3 text-center">
+                <p className="text-xs sm:text-sm text-gray-500">Weight</p>
+                <p className="font-semibold text-xs sm:text-base">
+                  {pokemon.weight / 10}kg
+                </p>
               </div>
             </div>
 
-            <div className="mb-6">
-              <h3 className="font-semibold text-gray-900 mb-3 text-center">
+            <div className="mb-4 sm:mb-6">
+              <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-center text-sm sm:text-base">
                 Base Stats
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {pokemon.stats?.map((stat, index) => (
                   <div key={index}>
-                    <div className="flex justify-between text-sm mb-1">
+                    <div className="flex justify-between text-xs sm:text-sm mb-0.5 sm:mb-1">
                       <span className="capitalize text-gray-600">
                         {stat.name.replace("-", " ")}
                       </span>
                       <span className="font-medium">{stat.value}</span>
                     </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className={`h-full bg-gradient-to-r ${typeColors[mainType]} transition-all duration-500`}
                         style={{
@@ -780,8 +790,8 @@ function PokeDetails({
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900 mb-3 text-center">
+            <div className="space-y-2 sm:space-y-4">
+              <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-center text-sm sm:text-base">
                 Status e Melhorias
               </h3>
               {pokemon.stats?.map((stat, index) => {
@@ -791,9 +801,9 @@ function PokeDetails({
                 const cost = getUpgradeCost(stat.value, currentUpgrades);
 
                 return (
-                  <div key={index} className="flex items-center gap-4">
+                  <div key={index} className="flex items-center gap-2 sm:gap-4">
                     <div className="flex-1">
-                      <div className="flex justify-between text-sm mb-1">
+                      <div className="flex justify-between text-xs sm:text-sm mb-0.5 sm:mb-1">
                         <span className="capitalize text-gray-600">
                           {stat.name.replace("-", " ")}
                         </span>
@@ -806,7 +816,7 @@ function PokeDetails({
                           )}
                         </span>
                       </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-blue-500 transition-all duration-500"
                           style={{ width: `${upgradePercentage}%` }}
@@ -816,7 +826,7 @@ function PokeDetails({
                     <button
                       onClick={() => handleUpgrade(index)}
                       disabled={currentUpgrades >= MAX_STAT_UPGRADE}
-                      className={`px-3 py-1 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                      className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm transition-colors whitespace-nowrap ${
                         currentUpgrades >= MAX_STAT_UPGRADE
                           ? "bg-gray-300 cursor-not-allowed"
                           : "bg-green-500 hover:bg-green-600 text-white"

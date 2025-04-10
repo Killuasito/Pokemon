@@ -231,9 +231,6 @@ function Settings({
                   </p>
                 )}
               </form>
-              <div className="mt-3 text-xs text-gray-500 italic">
-                Dica: A senha é "poke123"
-              </div>
             </div>
           ) : (
             <div className="space-y-4">

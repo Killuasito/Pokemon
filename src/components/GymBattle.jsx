@@ -37,6 +37,10 @@ function GymBattle({
   const [maxTeamSize] = useState(Math.min(6, gym.pokemon.length + 1));
   const [showSwitchDialog, setShowSwitchDialog] = useState(false);
   const [showItemsMenu, setShowItemsMenu] = useState(false);
+  const [megaEvolved, setMegaEvolved] = useState(false);
+  const [canMegaEvolve, setCanMegaEvolve] = useState(false);
+  const [megaEvolutionAnimation, setMegaEvolutionAnimation] = useState(false);
+  const [activeItemTab, setActiveItemTab] = useState("healing");
 
   const calculateLevel = (exp) => {
     if (!exp) return 1;
@@ -91,11 +95,14 @@ function GymBattle({
   }, [step, playerTeam]);
 
   useEffect(() => {
-    // When currentPokemon changes, update the battle log and reset turn to player
-    if (currentPokemon && step === "battle" && currentTurn !== "player") {
-      setTimeout(() => {
-        setCurrentTurn("player");
-      }, 1000);
+    if (currentPokemon && step === "battle") {
+      checkMegaEvolution();
+
+      if (currentTurn !== "player") {
+        setTimeout(() => {
+          setCurrentTurn("player");
+        }, 1000);
+      }
     }
   }, [currentPokemon, step]);
 
@@ -155,78 +162,144 @@ function GymBattle({
     }
   };
 
-  const addToTeam = (pokemon) => {
-    if (playerTeam.length >= maxTeamSize) {
-      alert(`Você só pode ter até ${maxTeamSize} Pokémon no seu time!`);
+  const checkMegaEvolution = () => {
+    if (!currentPokemon || !items || items.length === 0) {
+      setCanMegaEvolve(false);
       return;
     }
 
-    if (
-      playerTeam.some(
-        (p) =>
-          p.id === pokemon.id &&
-          JSON.stringify(p.moves) === JSON.stringify(pokemon.moves)
-      )
-    ) {
-      alert("Este Pokémon já está no seu time!");
-      return;
-    }
+    const availableMegaStones = items.filter(
+      (item) =>
+        item.category === "megaStone" &&
+        item.effect?.pokemon?.toLowerCase() ===
+          currentPokemon.name.toLowerCase()
+    );
 
-    setPlayerTeam([...playerTeam, pokemon]);
+    setCanMegaEvolve(availableMegaStones.length > 0);
   };
 
-  const removeFromTeam = (index) => {
-    const newTeam = [...playerTeam];
-    newTeam.splice(index, 1);
-    setPlayerTeam(newTeam);
+  const handleMegaEvolution = (megaStone) => {
+    if (!currentPokemon || megaEvolved || !megaStone) return;
 
-    if (currentPokemon && currentPokemon === playerTeam[index]) {
-      if (newTeam.length > 0) {
-        setCurrentPokemon(newTeam[0]);
-      } else {
-        setCurrentPokemon(null);
+    setMegaEvolutionAnimation(true);
+
+    setTimeout(() => {
+      setMegaEvolutionAnimation(false);
+
+      let megaImage = currentPokemon.image;
+
+      if (currentPokemon.name.toLowerCase() === "charizard") {
+        if (megaStone.effect.variant === "x") {
+          megaImage =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10034.png";
+        } else if (megaStone.effect.variant === "y") {
+          megaImage =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10035.png";
+        }
+      } else if (currentPokemon.name.toLowerCase() === "mewtwo") {
+        if (megaStone.effect.variant === "x") {
+          megaImage =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10043.png";
+        } else if (megaStone.effect.variant === "y") {
+          megaImage =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10044.png";
+        }
+      } else if (currentPokemon.name.toLowerCase() === "venusaur") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10033.png";
+      } else if (currentPokemon.name.toLowerCase() === "blastoise") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10036.png";
+      } else if (currentPokemon.name.toLowerCase() === "alakazam") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10037.png";
+      } else if (currentPokemon.name.toLowerCase() === "gengar") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10038.png";
+      } else if (currentPokemon.name.toLowerCase() === "gyarados") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10041.png";
+      } else if (currentPokemon.name.toLowerCase() === "lucario") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10059.png";
       }
-    }
-  };
 
-  const switchPokemon = (pokemon) => {
-    if (pokemonHealth.player[pokemon.id] <= 0) {
-      alert("Este Pokémon foi derrotado!");
-      return;
-    }
+      const megaBoosts = megaStone.effect.statsBoost || {
+        attack: 20,
+        defense: 20,
+        "special-attack": 20,
+        "special-defense": 20,
+        speed: 10,
+      };
 
-    if (pokemonHealth.player[pokemon.id] === undefined) {
-      setPokemonHealth((prev) => ({
-        ...prev,
-        player: {
-          ...prev.player,
-          [pokemon.id]: 100,
-        },
-      }));
-    }
+      if (!currentPokemon.stats) {
+        currentPokemon.stats = [
+          { name: "hp", value: 100 },
+          { name: "attack", value: 80 },
+          { name: "defense", value: 80 },
+          { name: "special-attack", value: 80 },
+          { name: "special-defense", value: 80 },
+          { name: "speed", value: 80 },
+        ];
+      }
 
-    const previousPokemonName = currentPokemon ? currentPokemon.name : "";
+      const originalStats = currentPokemon.stats
+        ? JSON.parse(JSON.stringify(currentPokemon.stats))
+        : [];
 
-    setCurrentPokemon(pokemon);
-    setShowSwitchDialog(false);
+      const megaStats = originalStats.map((stat) => {
+        const boost = megaBoosts[stat.name] || 0;
+        return {
+          ...stat,
+          originalValue: stat.value,
+          value: Math.floor(stat.value * (1 + boost / 100)),
+        };
+      });
 
-    if (step === "battle" && previousPokemonName) {
+      const megaEvolvedPokemon = {
+        ...currentPokemon,
+        isMega: true,
+        megaVariant: megaStone.effect.variant || "",
+        originalTypes: [...currentPokemon.types],
+        types: megaStone.effect.typeChange || [...currentPokemon.types],
+        originalImage: currentPokemon.image,
+        image: megaImage,
+        originalStats: originalStats,
+        stats: megaStats,
+        megaStats: megaBoosts,
+      };
+
       setBattleLog((prev) => [
         ...prev,
-        `${previousPokemonName} retorna! ${pokemon.name}, eu escolho você!`,
+        `${currentPokemon.name} mega evoluiu para Mega ${currentPokemon.name}${
+          megaStone.effect.variant
+            ? " " + megaStone.effect.variant.toUpperCase()
+            : ""
+        }!`,
+        `Seus atributos aumentaram drasticamente!`,
       ]);
 
-      if (currentTurn === "player") {
-        performOpponentTurn();
-      }
-    }
-  };
+      const statBoostMessages = Object.entries(megaBoosts)
+        .filter(([_, value]) => value > 0)
+        .map(([stat, boost]) => {
+          const statName = stat
+            .split("-")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+          return `${statName} +${boost}%`;
+        });
 
-  const areAllPlayerPokemonDefeated = () => {
-    return playerTeam.every((pokemon) => {
-      const health = pokemonHealth.player[pokemon.id];
-      return health !== undefined && health <= 0;
-    });
+      if (statBoostMessages.length > 0) {
+        setBattleLog((prev) => [
+          ...prev,
+          `Aumentos: ${statBoostMessages.join(", ")}`,
+        ]);
+      }
+
+      setCurrentPokemon(megaEvolvedPokemon);
+      setMegaEvolved(true);
+      setShowItemsMenu(false);
+    }, 2000);
   };
 
   const calculateTypeEffectiveness = (moveType, defenderType) => {
@@ -393,233 +466,91 @@ function GymBattle({
         2) *
       effectiveness;
 
+    if (attacker.isMega) {
+      if (
+        [
+          "normal",
+          "fighting",
+          "poison",
+          "ground",
+          "rock",
+          "bug",
+          "ghost",
+          "steel",
+        ].includes(move.type)
+      ) {
+        const attackBoost = attacker.megaStats?.attack || 0;
+        damage *= 1 + attackBoost / 100;
+      } else {
+        const spAttackBoost = attacker.megaStats?.["special-attack"] || 0;
+        damage *= 1 + spAttackBoost / 100;
+      }
+    }
+
     damage *= Math.random() * 0.2 + 0.9;
 
     return Math.round(damage);
   };
 
-  const executeMove = (move, attacker, defender, isPlayer) => {
-    const accuracy = move.accuracy || 100;
-    if (Math.random() * 100 > accuracy) {
-      setBattleLog((prev) => [...prev, `${attacker.name} errou o ataque!`]);
-      return 0;
-    }
-
-    const damage = calculateDamage(move, attacker, defender);
-    const healthKey = isPlayer ? "opponent" : "player";
-    const effectiveness = calculateTypeEffectiveness(
-      move.type,
-      defender.types[0]
-    );
-
-    if (isPlayer) {
-      setPokemonHealth((prev) => {
-        const newHealth = Math.max(0, prev[healthKey] - damage);
-        return {
-          ...prev,
-          [healthKey]: newHealth,
-        };
-      });
-    } else {
-      setPokemonHealth((prev) => {
-        const currentHealth = prev.player[currentPokemon.id] ?? 100;
-        const newHealth = Math.max(0, currentHealth - damage);
-        return {
-          ...prev,
-          player: {
-            ...prev.player,
-            [currentPokemon.id]: newHealth,
-          },
-        };
-      });
-    }
-
-    let effectivenessMessage = "";
-    if (effectiveness > 1.5) {
-      effectivenessMessage = "É super efetivo!";
-    } else if (effectiveness < 0.5) {
-      effectivenessMessage = "Não é muito efetivo...";
-    } else if (effectiveness === 0) {
-      effectivenessMessage = "Não teve efeito!";
-    }
-
-    setBattleLog((prev) =>
-      [
-        ...prev,
-        `${attacker.name} usou ${move.name}!`,
-        effectivenessMessage,
-        `Causou ${damage} de dano!`,
-      ].filter(Boolean)
-    );
-
-    return damage;
-  };
-
-  const performOpponentTurn = async () => {
-    if (!currentOpponent || !currentPokemon) return;
-
-    setCurrentTurn("opponent");
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const opponentMoves = currentOpponent.moves.filter((m) => m.power);
-    const opponentMove =
-      opponentMoves[Math.floor(Math.random() * opponentMoves.length)];
-
-    if (!opponentMove) {
-      setBattleLog((prev) => [
-        ...prev,
-        `${currentOpponent.name} falhou ao atacar!`,
-      ]);
-      setCurrentTurn("player");
-      return;
-    }
-
-    const opponentDamage = executeMove(
-      opponentMove,
-      currentOpponent,
-      currentPokemon,
-      false
-    );
-
-    const newPlayerHealth = Math.max(
-      0,
-      pokemonHealth.player[currentPokemon.id] - opponentDamage
-    );
-
-    setPokemonHealth((prev) => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        [currentPokemon.id]: newPlayerHealth,
-      },
-    }));
-
-    if (newPlayerHealth <= 0) {
-      setBattleLog((prev) => [
-        ...prev,
-        `${currentPokemon.name} foi derrotado!`,
-      ]);
-
-      if (areAllPlayerPokemonDefeated()) {
-        setBattleLog((prev) => [
-          ...prev,
-          `${gym.leader}: "Você precisa treinar mais!"`,
-        ]);
-
-        setTimeout(() => {
-          setResult({
-            victory: false,
-            pokemonUsed: playerTeam,
-          });
-          setStep("result");
-        }, 2000);
-        return;
-      } else {
-        setShowSwitchDialog(true);
-        return;
-      }
-    }
-
-    setCurrentTurn("player");
-  };
-
-  const handleMoveSelect = async (move) => {
-    if (!currentPokemon || !currentOpponent || currentTurn !== "player") return;
-
-    const playerDamage = executeMove(
-      move,
-      currentPokemon,
-      currentOpponent,
-      true
-    );
-
-    const newOpponentHealth = Math.max(
-      0,
-      pokemonHealth.opponent - playerDamage
-    );
-
-    setPokemonHealth((prev) => ({
-      ...prev,
-      opponent: newOpponentHealth,
-    }));
-
-    if (newOpponentHealth <= 0) {
-      setBattleLog((prev) => [
-        ...prev,
-        `${currentOpponent.name} foi derrotado!`,
-      ]);
-
-      if (opponentIndex < gym.pokemon.length - 1) {
-        setTimeout(() => {
-          setOpponentIndex((prevIndex) => prevIndex + 1);
-          setPokemonHealth((prev) => ({ ...prev, opponent: 100 }));
-        }, 2000);
-      } else {
-        setBattleLog((prev) => [
-          ...prev,
-          `Você derrotou o líder ${gym.leader}!`,
-          `Você ganhou o ${gym.badge}!`,
-          `Recompensa: ${gym.rewards.coins} moedas, ${gym.rewards.exp} EXP`,
-        ]);
-
-        setTimeout(() => {
-          setResult({
-            victory: true,
-            pokemonUsed: playerTeam,
-          });
-          setStep("result");
-        }, 3000);
-      }
-      return;
-    }
-
-    performOpponentTurn();
-  };
-
-  const isTeamReady = () => {
-    return playerTeam.length > 0;
-  };
-
   const useHealingItem = (item) => {
     if (!currentPokemon || currentTurn !== "player") return;
 
-    const healingItems =
-      items && items.filter
-        ? items.filter(
-            (i) =>
-              i.category === "healing" &&
-              (i.effect.type === "heal" ||
-                (i.effect.type === "revive" &&
-                  pokemonHealth.player[currentPokemon.id] <= 0))
-          )
-        : [];
-
-    if (healingItems.length === 0) {
-      alert("Você não possui itens de cura!");
+    if (!item || !item.effect) {
+      console.error("Item inválido", item);
       return;
     }
-
-    const selectedItem = items.find((i) => i.id === item.id);
-    if (!selectedItem) return;
 
     let newHealth = pokemonHealth.player[currentPokemon.id] || 0;
     const effectText = [];
 
-    if (selectedItem.effect.type === "heal") {
-      const healAmount = selectedItem.effect.value;
+    if (item.effect.type === "heal") {
+      const healAmount = item.effect.value;
       newHealth = Math.min(100, newHealth + healAmount);
       effectText.push(`${currentPokemon.name} recuperou ${healAmount}% de HP!`);
-    } else if (selectedItem.effect.type === "revive") {
+
+      const updatedItems = [...items];
+      const itemIndex = updatedItems.findIndex((i) => i.id === item.id);
+
+      if (itemIndex >= 0) {
+        updatedItems[itemIndex].quantity--;
+
+        if (updatedItems[itemIndex].quantity <= 0) {
+          updatedItems.splice(itemIndex, 1);
+        }
+
+        setItems(updatedItems);
+        localStorage.setItem("items", JSON.stringify(updatedItems));
+      }
+    } else if (item.effect.type === "revive") {
       if (pokemonHealth.player[currentPokemon.id] > 0) {
         alert("Este Pokémon não está desmaiado!");
         return;
       }
 
-      newHealth = selectedItem.effect.value;
+      newHealth = item.effect.value;
       effectText.push(
-        `${currentPokemon.name} foi revivido com ${selectedItem.effect.value}% de HP!`
+        `${currentPokemon.name} foi revivido com ${item.effect.value}% de HP!`
       );
+
+      const updatedItems = [...items];
+      const itemIndex = updatedItems.findIndex((i) => i.id === item.id);
+
+      if (itemIndex >= 0) {
+        updatedItems[itemIndex].quantity--;
+
+        if (updatedItems[itemIndex].quantity <= 0) {
+          updatedItems.splice(itemIndex, 1);
+        }
+
+        setItems(updatedItems);
+        localStorage.setItem("items", JSON.stringify(updatedItems));
+      }
+    } else if (item.effect.type === "megaEvolution") {
+      handleMegaEvolution(item);
+      return;
+    } else {
+      alert("Este item não pode ser usado agora.");
+      return;
     }
 
     setPokemonHealth((prev) => ({
@@ -630,50 +561,67 @@ function GymBattle({
       },
     }));
 
-    setBattleLog((prev) => [
-      ...prev,
-      `Você usou ${selectedItem.name}!`,
-      ...effectText,
-    ]);
-
-    const updatedItems = [...items];
-    const itemIndex = updatedItems.findIndex((i) => i.id === selectedItem.id);
-
-    if (itemIndex >= 0) {
-      updatedItems[itemIndex].quantity--;
-
-      if (updatedItems[itemIndex].quantity <= 0) {
-        updatedItems.splice(itemIndex, 1);
-      }
-
-      setItems(updatedItems);
-      localStorage.setItem("items", JSON.stringify(updatedItems));
-    }
+    setBattleLog((prev) => [...prev, `Você usou ${item.name}!`, ...effectText]);
 
     setShowItemsMenu(false);
 
     performOpponentTurn();
   };
 
-  const typeColors = {
-    normal: "gray",
-    fire: "red",
-    water: "blue",
-    electric: "yellow",
-    grass: "green",
-    ice: "blue",
-    fighting: "red",
-    poison: "purple",
-    ground: "yellow",
-    flying: "indigo",
-    psychic: "pink",
-    bug: "lime",
-    rock: "yellow",
-    ghost: "purple",
-    dragon: "indigo",
-    dark: "gray",
-    steel: "gray",
-    fairy: "pink",
+  const switchPokemon = (pokemon) => {
+    if (pokemonHealth.player[pokemon.id] <= 0) {
+      alert("Este Pokémon foi derrotado!");
+      return;
+    }
+
+    if (pokemonHealth.player[pokemon.id] === undefined) {
+      setPokemonHealth((prev) => ({
+        ...prev,
+        player: {
+          ...prev.player,
+          [pokemon.id]: 100,
+        },
+      }));
+    }
+
+    const previousPokemonName = currentPokemon ? currentPokemon.name : "";
+
+    setMegaEvolved(false);
+    setCurrentPokemon(pokemon);
+    setShowSwitchDialog(false);
+
+    if (step === "battle" && previousPokemonName) {
+      setBattleLog((prev) => [
+        ...prev,
+        `${previousPokemonName} retorna! ${pokemon.name}, eu escolho você!`,
+      ]);
+
+      checkMegaEvolution();
+
+      if (currentTurn === "player") {
+        performOpponentTurn();
+      }
+    }
+  };
+
+  const handleBattleEnd = () => {
+    if (currentPokemon && currentPokemon.isMega) {
+      const resetPokemon = {
+        ...currentPokemon,
+        isMega: false,
+        image: currentPokemon.originalImage || currentPokemon.image,
+        types: currentPokemon.originalTypes || currentPokemon.types,
+        stats: currentPokemon.originalStats || currentPokemon.stats,
+      };
+      delete resetPokemon.megaVariant;
+      delete resetPokemon.originalTypes;
+      delete resetPokemon.originalImage;
+      delete resetPokemon.originalStats;
+      delete resetPokemon.megaStats;
+
+      setCurrentPokemon(resetPokemon);
+    }
+    setMegaEvolved(false);
   };
 
   return (
@@ -847,7 +795,6 @@ function GymBattle({
             <div className="p-4 md:p-6">
               <div className="flex flex-col gap-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Player's Pokémon Section */}
                   <div className="bg-gradient-to-b from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-md">
                     <div className="relative w-full mb-3">
                       <div className="absolute left-0 top-0 bg-blue-100 px-2.5 py-1 rounded-md text-xs font-medium text-blue-800 capitalize flex items-center gap-1">
@@ -944,7 +891,6 @@ function GymBattle({
                         ))}
                       </div>
 
-                      {/* Battle Controls */}
                       <div className="mt-4">
                         {currentTurn === "player" ? (
                           <div className="space-y-3">
@@ -1015,7 +961,6 @@ function GymBattle({
                     </div>
                   </div>
 
-                  {/* Opponent's Pokémon Section */}
                   <div className="bg-gradient-to-b from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-md">
                     <div className="relative w-full mb-3">
                       <div className="absolute left-0 top-0 bg-red-100 px-2.5 py-1 rounded-md text-xs font-medium text-red-800 capitalize flex items-center gap-1">
@@ -1104,7 +1049,6 @@ function GymBattle({
                         ))}
                       </div>
 
-                      {/* Opponent Stats Card */}
                       <div className="mt-5 bg-gray-50 rounded-lg p-3 border border-gray-200">
                         <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
                           <FaShieldAlt className="text-gray-500" /> Dados do
@@ -1129,7 +1073,6 @@ function GymBattle({
                   </div>
                 </div>
 
-                {/* Battle Log */}
                 <div className="bg-gradient-to-b from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-md">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-semibold text-gray-700 flex items-center gap-1.5">
@@ -1416,433 +1359,6 @@ function GymBattle({
           </div>
         )}
 
-        {/* Switch Pokémon Dialog */}
-        {showSwitchDialog && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-20 backdrop-blur-sm animate-fade-up">
-            <div className="bg-white rounded-xl p-6 max-w-2xl w-full shadow-2xl border border-gray-200">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <FaExchangeAlt className="text-blue-500" />
-                  Trocar Pokémon
-                </h3>
-                {!areAllPlayerPokemonDefeated() && (
-                  <button
-                    onClick={() => setShowSwitchDialog(false)}
-                    className="text-gray-500 hover:bg-gray-100 p-2 rounded-full transition-colors"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                )}
-              </div>
-
-              <p className="text-sm text-gray-600 mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
-                Selecione outro Pokémon para continuar a batalha
-              </p>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-                {playerTeam.map((pokemon, index) => {
-                  const health = pokemonHealth.player[pokemon.id] ?? 100;
-                  const isDefeated = health <= 0;
-                  const isActive = pokemon === currentPokemon;
-
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => switchPokemon(pokemon)}
-                      disabled={isDefeated || isActive}
-                      className={`p-4 border rounded-lg transition-all ${
-                        isActive
-                          ? "border-green-500 bg-green-50 ring-2 ring-green-400"
-                          : isDefeated
-                          ? "border-red-300 bg-red-50 opacity-60"
-                          : "border-gray-300 hover:border-blue-500 hover:shadow-md"
-                      }`}
-                    >
-                      <div className="relative">
-                        <div className="bg-gray-50 p-1 rounded-lg">
-                          <img
-                            src={pokemon.image}
-                            alt={pokemon.name}
-                            className="w-full h-24 object-contain"
-                          />
-                        </div>
-                        <span
-                          className={`absolute top-1 right-1 px-1.5 py-0.5 text-xs font-medium rounded-md shadow-sm ${
-                            isActive
-                              ? "bg-green-500 text-white"
-                              : isDefeated
-                              ? "bg-red-500 text-white"
-                              : "bg-gray-200 text-gray-800"
-                          }`}
-                        >
-                          {isDefeated
-                            ? "Derrotado"
-                            : isActive
-                            ? "Ativo"
-                            : "Disponível"}
-                        </span>
-                      </div>
-                      <p className="font-medium capitalize mt-2">
-                        {pokemon.name}
-                      </p>
-                      <div className="flex items-center justify-between text-sm mt-1">
-                        <span className="text-gray-600">
-                          Nv.{calculateLevel(pokemon.exp || 0)}
-                        </span>
-                        <span
-                          className={
-                            isDefeated
-                              ? "text-red-600 font-medium"
-                              : "text-green-600 font-medium"
-                          }
-                        >
-                          HP: {health}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${
-                            isDefeated
-                              ? "bg-red-500"
-                              : health > 50
-                              ? "bg-green-500"
-                              : health > 20
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                          style={{ width: `${health}%` }}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {!areAllPlayerPokemonDefeated() && (
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setShowSwitchDialog(false)}
-                    className="px-5 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg shadow-md transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Team Selector Modal */}
-        {showTeamSelector && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-20 backdrop-blur-sm">
-            <div className="bg-white rounded-xl p-6 w-11/12 max-w-5xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h3 className="text-2xl font-bold">Monte sua Equipe</h3>
-                  <p className="text-sm text-gray-600">
-                    Escolha até {maxTeamSize} Pokémon para enfrentar o Líder{" "}
-                    {gym.leader}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowTeamSelector(false)}
-                  className="text-gray-500 hover:bg-gray-100 p-2 rounded-full"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-2 bg-blue-100 rounded-full text-blue-700">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <span className="font-bold text-lg">
-                    Dica: {gym.description}
-                  </span>
-                </div>
-                <p className="text-gray-700 ml-10">
-                  Os Pokémon com{" "}
-                  <span className="font-bold text-yellow-600">
-                    borda amarela
-                  </span>{" "}
-                  têm vantagem de tipo contra este ginásio.
-                </p>
-              </div>
-
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-xl font-semibold">
-                    Sua Equipe ({playerTeam.length}/{maxTeamSize})
-                  </h4>
-                  {playerTeam.length > 0 && (
-                    <button
-                      className="text-sm text-red-600 hover:text-red-800 hover:underline flex items-center"
-                      onClick={() => setPlayerTeam([])}
-                    >
-                      <svg
-                        className="w-4 h-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                      Limpar equipe
-                    </button>
-                  )}
-                </div>
-
-                <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 min-h-28">
-                  {playerTeam.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-20 text-gray-400">
-                      <svg
-                        className="w-8 h-8 mb-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <p>Nenhum Pokémon selecionado</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                      {playerTeam.map((pokemon, index) => (
-                        <div
-                          key={index}
-                          className="bg-white border rounded-lg p-3 relative shadow-sm"
-                        >
-                          <button
-                            className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 flex items-center justify-center rounded-full text-sm shadow hover:bg-red-600"
-                            onClick={() => removeFromTeam(index)}
-                          >
-                            ×
-                          </button>
-                          <img
-                            src={pokemon.image}
-                            alt={pokemon.name}
-                            className="w-full h-20 object-contain"
-                          />
-                          <p className="font-medium text-center capitalize truncate mt-1">
-                            {pokemon.name}
-                          </p>
-                          <div className="flex justify-center gap-1 mt-1">
-                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
-                              Nv.{calculateLevel(pokemon.exp || 0)}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-xl font-semibold">Pokémon Disponíveis</h4>
-                  <span className="text-sm text-gray-600">
-                    Clique para adicionar à equipe
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 max-h-[400px] overflow-y-auto p-1">
-                  {inventory.map((pokemon, index) => {
-                    const isInTeam = playerTeam.some(
-                      (p) =>
-                        p.id === pokemon.id &&
-                        JSON.stringify(p.moves) ===
-                          JSON.stringify(pokemon.moves)
-                    );
-                    const level = calculateLevel(pokemon.exp || 0);
-
-                    const gymType =
-                      gym.description.split(":")[1]?.trim().toLowerCase() || "";
-                    const primaryGymType = gymType.includes(" tipo ")
-                      ? gymType.split(" tipo ")[1].toLowerCase()
-                      : "";
-
-                    const hasTypeAdvantage = pokemon.types.some((type) => {
-                      if (
-                        primaryGymType.includes("pedra") &&
-                        [
-                          "water",
-                          "grass",
-                          "fighting",
-                          "ground",
-                          "steel",
-                        ].includes(type)
-                      )
-                        return true;
-                      if (
-                        primaryGymType.includes("água") &&
-                        ["electric", "grass"].includes(type)
-                      )
-                        return true;
-                      if (
-                        primaryGymType.includes("fogo") &&
-                        ["water", "rock", "ground"].includes(type)
-                      )
-                        return true;
-                      if (
-                        primaryGymType.includes("elétrico") &&
-                        ["ground"].includes(type)
-                      )
-                        return true;
-                      if (
-                        primaryGymType.includes("planta") &&
-                        ["fire", "ice", "poison", "flying", "bug"].includes(
-                          type
-                        )
-                      )
-                        return true;
-                      if (
-                        primaryGymType.includes("venenoso") &&
-                        ["ground", "psychic"].includes(type)
-                      )
-                        return true;
-                      if (
-                        primaryGymType.includes("psíquico") &&
-                        ["bug", "ghost", "dark"].includes(type)
-                      )
-                        return true;
-                      if (
-                        primaryGymType.includes("terra") &&
-                        ["water", "grass", "ice"].includes(type)
-                      )
-                        return true;
-                      return false;
-                    });
-
-                    return (
-                      <div
-                        key={index}
-                        onClick={() =>
-                          !isInTeam &&
-                          playerTeam.length < maxTeamSize &&
-                          addToTeam(pokemon)
-                        }
-                        className={`border rounded-lg p-3 relative transition-all ${
-                          isInTeam
-                            ? "border-green-500 bg-green-50 shadow"
-                            : playerTeam.length >= maxTeamSize
-                            ? "border-gray-200 opacity-60 cursor-not-allowed"
-                            : "border-gray-200 cursor-pointer hover:border-blue-500 hover:shadow-md"
-                        } ${hasTypeAdvantage ? "ring-2 ring-yellow-400" : ""}`}
-                      >
-                        <img
-                          src={pokemon.image}
-                          alt={pokemon.name}
-                          className="w-full h-24 object-contain transition-transform hover:scale-105"
-                        />
-
-                        {hasTypeAdvantage && (
-                          <div className="absolute top-1 right-1 bg-yellow-400 text-yellow-800 text-xs font-bold px-1.5 py-0.5 rounded shadow">
-                            Vantagem!
-                          </div>
-                        )}
-
-                        <p className="font-semibold text-center capitalize mt-2 text-sm">
-                          {pokemon.name}
-                        </p>
-
-                        <div className="flex justify-center flex-wrap gap-1 mt-2">
-                          <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
-                            Nv.{level}
-                          </span>
-                          {pokemon.types.map((type, i) => (
-                            <span
-                              key={i}
-                              className={`text-xs px-1.5 py-0.5 rounded bg-${type}-100 text-${type}-800`}
-                            >
-                              {type}
-                            </span>
-                          ))}
-                        </div>
-
-                        {isInTeam && (
-                          <div className="mt-2 bg-green-100 text-center rounded py-1 text-xs font-medium text-green-800">
-                            Na equipe
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="mt-8 flex justify-between border-t pt-4">
-                <button
-                  onClick={() => setShowTeamSelector(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => setShowTeamSelector(false)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  disabled={playerTeam.length === 0}
-                >
-                  Confirmar Equipe
-                  <span className="bg-white text-blue-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
-                    {playerTeam.length}
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Items Menu Modal */}
         {showItemsMenu && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-20 backdrop-blur-sm">
             <div className="bg-white rounded-xl p-6 max-w-2xl w-full">
@@ -1874,53 +1390,146 @@ function GymBattle({
                 </p>
               </div>
 
+              <div className="flex border-b border-gray-200 mb-4">
+                <button
+                  className={`px-4 py-2 border-b-2 ${
+                    activeItemTab === "healing"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500"
+                  }`}
+                  onClick={() => setActiveItemTab("healing")}
+                >
+                  Itens de Cura
+                </button>
+                {canMegaEvolve && !megaEvolved && (
+                  <button
+                    className={`px-4 py-2 border-b-2 ${
+                      activeItemTab === "mega"
+                        ? "border-orange-500 text-orange-600"
+                        : "border-transparent text-gray-500"
+                    }`}
+                    onClick={() => setActiveItemTab("mega")}
+                  >
+                    Mega Evolução
+                  </button>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto">
-                {items
-                  .filter((item) => item.category === "healing")
-                  .map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => useHealingItem(item)}
-                      disabled={
-                        (item.effect.type === "revive" &&
-                          pokemonHealth.player[currentPokemon?.id] > 0) ||
-                        (item.effect.type === "heal" &&
-                          pokemonHealth.player[currentPokemon?.id] <= 0)
-                      }
-                      className={`
-                        flex items-center p-3 border rounded-lg text-left
-                        ${
+                {activeItemTab === "healing" &&
+                  items
+                    .filter((item) => item.category === "healing")
+                    .map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => useHealingItem(item)}
+                        disabled={
                           (item.effect.type === "revive" &&
                             pokemonHealth.player[currentPokemon?.id] > 0) ||
                           (item.effect.type === "heal" &&
                             pokemonHealth.player[currentPokemon?.id] <= 0)
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:border-blue-500 hover:bg-blue-50"
                         }
-                      `}
-                    >
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-10 h-10 mr-3"
-                      />
-                      <div>
-                        <h4 className="font-medium">{item.name}</h4>
-                        <p className="text-xs text-gray-600">
-                          {item.description}
-                        </p>
-                        <p className="text-xs text-blue-600 mt-1">
-                          Quantidade: {item.quantity}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                        className={`
+                          flex items-center p-3 border rounded-lg text-left
+                          ${
+                            (item.effect.type === "revive" &&
+                              pokemonHealth.player[currentPokemon?.id] > 0) ||
+                            (item.effect.type === "heal" &&
+                              pokemonHealth.player[currentPokemon?.id] <= 0)
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:border-blue-500 hover:bg-blue-50"
+                          }
+                        `}
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-10 h-10 mr-3"
+                        />
+                        <div>
+                          <h4 className="font-medium">{item.name}</h4>
+                          <p className="text-xs text-gray-600">
+                            {item.description}
+                          </p>
+                          <p className="text-xs text-blue-600 mt-1">
+                            Quantidade: {item.quantity}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+
+                {activeItemTab === "mega" &&
+                  items
+                    .filter(
+                      (item) =>
+                        item.category === "megaStone" &&
+                        item.effect?.pokemon?.toLowerCase() ===
+                          currentPokemon.name.toLowerCase()
+                    )
+                    .map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => useHealingItem(item)}
+                        className="p-3 border rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all flex items-center gap-3 text-left"
+                      >
+                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-10 h-10 object-contain"
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <h4 className="font-medium text-gray-900">
+                            {item.name}
+                          </h4>
+                          <p className="text-xs text-gray-600">
+                            {item.description}
+                          </p>
+                          <div className="flex justify-between items-center mt-1">
+                            {item.effect.statsBoost && (
+                              <span className="text-xs text-orange-600">
+                                Aumento de status
+                              </span>
+                            )}
+                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">
+                              x{item.quantity}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
               </div>
 
-              {items.filter((item) => item.category === "healing").length ===
-                0 && (
+              {((activeItemTab === "healing" &&
+                items.filter((item) => item.category === "healing").length ===
+                  0) ||
+                (activeItemTab === "mega" &&
+                  items.filter(
+                    (item) =>
+                      item.category === "megaStone" &&
+                      item.effect?.pokemon?.toLowerCase() ===
+                        currentPokemon?.name?.toLowerCase()
+                  ).length === 0)) && (
                 <div className="text-center py-6 text-gray-500">
-                  Você não possui itens de cura. Visite a loja para comprar!
+                  {activeItemTab === "healing" ? (
+                    <div>
+                      <p className="font-medium mb-1">
+                        Você não possui itens de cura.
+                      </p>
+                      <p className="text-sm">Visite a loja para comprar!</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="font-medium mb-1">
+                        Nenhuma pedra de mega evolução disponível para{" "}
+                        {currentPokemon?.name}
+                      </p>
+                      <p className="text-sm">
+                        Visite a loja para comprar pedras de mega evolução.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1936,77 +1545,27 @@ function GymBattle({
           </div>
         )}
 
-        {/* Add this to your existing CSS or component */}
-        <style jsx>{`
-          .text-shadow {
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-          }
-
-          @keyframes float {
-            0% {
-              transform: translateY(0px);
-            }
-            50% {
-              transform: translateY(-10px);
-            }
-            100% {
-              transform: translateY(0px);
-            }
-          }
-
-          @keyframes bounce-slow {
-            0%,
-            100% {
-              transform: translateY(-5px);
-            }
-            50% {
-              transform: translateY(5px);
-            }
-          }
-
-          .animate-float {
-            animation: float 3s ease-in-out infinite;
-          }
-
-          .animate-bounce-slow {
-            animation: bounce-slow 2s ease-in-out infinite;
-          }
-
-          .animate-fade-up {
-            animation: fadeUp 0.5s ease-out forwards;
-          }
-
-          @keyframes fadeUp {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          .animate-pulse-soft {
-            animation: pulseSoft 2s infinite;
-          }
-
-          @keyframes pulseSoft {
-            0%,
-            100% {
-              opacity: 1;
-            }
-            50% {
-              opacity: 0.6;
-            }
-          }
-        `}</style>
+        {megaEvolutionAnimation && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black opacity-60"></div>
+            <div className="relative z-10 flex flex-col items-center animate-pulse">
+              <div className="w-40 h-40 rounded-full bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 animate-spin-slow"></div>
+              <img
+                src={currentPokemon.image}
+                alt={currentPokemon.name}
+                className="absolute w-36 h-36 object-contain animate-bounce-slow"
+              />
+              <div className="text-white text-2xl font-bold mt-8 text-center">
+                MEGA EVOLUÇÃO!
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// Helper function for type colors
 const getTypeColorClass = (type) => {
   const typeClasses = {
     normal: "bg-gray-500",

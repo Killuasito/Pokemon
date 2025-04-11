@@ -20,6 +20,7 @@ function ItemShop({ coins, updateCoins, items, setItems }) {
     xpBoost: "Boosters de XP",
     healing: "Itens de Cura",
     statBoost: "Boosters de Status",
+    megaStone: "Pedras de Mega Evolução",
     all: "Todos os Itens",
   };
 
@@ -203,6 +204,154 @@ function ItemShop({ coins, updateCoins, items, setItems }) {
       price: 5000,
       category: "statBoost",
       effect: { type: "stat", stat: "speed", value: 10 },
+    },
+    {
+      id: "charizardite_x",
+      name: "Charizardite X",
+      description: "Permite a Mega Evolução de Charizard para Mega Charizard X",
+      image:
+        "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e8ddc4da-23dd-4502-b65b-378c9cfe5efa/dfftf0k-b8e6e594-6c62-45b3-9b9b-b9743888658e.png/v1/fit/w_375,h_375/charizardite_x_by_jormxdos_dfftf0k-375w.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTI4MCIsInBhdGgiOiJcL2ZcL2U4ZGRjNGRhLTIzZGQtNDUwMi1iNjViLTM3OGM5Y2ZlNWVmYVwvZGZmdGYway1iOGU2ZTU5NC02YzYyLTQ1YjMtOWI5Yi1iOTc0Mzg4ODY1OGUucG5nIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.UQMi2MjruZpfyL_P31T36e7umCgqwGVmYowWn6UI-6s",
+      price: 15000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "charizard",
+        variant: "x",
+        statsBoost: { attack: 30, defense: 20, "special-attack": 10 },
+        typeChange: ["fire", "dragon"],
+      },
+    },
+    {
+      id: "charizardite_y",
+      name: "Charizardite Y",
+      description: "Permite a Mega Evolução de Charizard para Mega Charizard Y",
+      image:
+        "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e8ddc4da-23dd-4502-b65b-378c9cfe5efa/dfftf0q-dababa25-40c8-43b8-aaeb-65bb6be03f48.png/v1/fill/w_1280,h_1280/charizardite_y_by_jormxdos_dfftf0q-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTI4MCIsInBhdGgiOiJcL2ZcL2U4ZGRjNGRhLTIzZGQtNDUwMi1iNjViLTM3OGM5Y2ZlNWVmYVwvZGZmdGYwcS1kYWJhYmEyNS00MGM4LTQzYjgtYWFlYi02NWJiNmJlMDNmNDgucG5nIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.cE6-DL7lRAMaKwkqXfzipx-cV5JvAxJo14M0c4_r90E",
+      price: 15000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "charizard",
+        variant: "y",
+        statsBoost: { attack: 10, "special-attack": 40 },
+        typeChange: ["fire", "flying"],
+      },
+    },
+    {
+      id: "venusaurite",
+      name: "Venusaurite",
+      description: "Permite a Mega Evolução de Venusaur para Mega Venusaur",
+      image:
+        "https://archives.bulbagarden.net/media/upload/7/7e/Bag_Venusaurite_Sprite.png",
+      price: 15000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "venusaur",
+        statsBoost: { defense: 20, "special-defense": 30 },
+      },
+    },
+    {
+      id: "blastoisinite",
+      name: "Blastoisinite",
+      description: "Permite a Mega Evolução de Blastoise para Mega Blastoise",
+      image:
+        "https://archives.bulbagarden.net/media/upload/d/da/Bag_Blastoisinite_Sprite.png",
+      price: 15000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "blastoise",
+        statsBoost: { "special-attack": 30, "special-defense": 20 },
+      },
+    },
+    {
+      id: "alakazite",
+      name: "Alakazite",
+      description: "Permite a Mega Evolução de Alakazam para Mega Alakazam",
+      image:
+        "https://archives.bulbagarden.net/media/upload/c/c5/Bag_Alakazite_Sprite.png",
+      price: 15000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "alakazam",
+        statsBoost: { "special-attack": 40, speed: 10 },
+      },
+    },
+    {
+      id: "gengarite",
+      name: "Gengarite",
+      description: "Permite a Mega Evolução de Gengar para Mega Gengar",
+      image:
+        "https://archives.bulbagarden.net/media/upload/0/0d/Bag_Gengarite_Sprite.png",
+      price: 15000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "gengar",
+        statsBoost: { "special-attack": 30, speed: 20 },
+      },
+    },
+    {
+      id: "mewtwo_x",
+      name: "Mewtwonite X",
+      description: "Permite a Mega Evolução de Mewtwo para Mega Mewtwo X",
+      image:
+        "https://archives.bulbagarden.net/media/upload/c/c1/Bag_Mewtwonite_X_Sprite.png",
+      price: 30000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "mewtwo",
+        variant: "x",
+        statsBoost: { attack: 40, defense: 20, "special-attack": 10 },
+        typeChange: ["psychic", "fighting"],
+      },
+    },
+    {
+      id: "mewtwo_y",
+      name: "Mewtwonite Y",
+      description: "Permite a Mega Evolução de Mewtwo para Mega Mewtwo Y",
+      image:
+        "https://archives.bulbagarden.net/media/upload/8/85/Bag_Mewtwonite_Y_Sprite.png",
+      price: 30000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "mewtwo",
+        variant: "y",
+        statsBoost: { "special-attack": 40, speed: 20 },
+      },
+    },
+    {
+      id: "lucarionite",
+      name: "Lucarionite",
+      description: "Permite a Mega Evolução de Lucario para Mega Lucario",
+      image:
+        "https://archives.bulbagarden.net/media/upload/7/70/Bag_Lucarionite_Sprite.png",
+      price: 15000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "lucario",
+        statsBoost: { attack: 25, "special-attack": 25 },
+      },
+    },
+    {
+      id: "gyaradosite",
+      name: "Gyaradosite",
+      description: "Permite a Mega Evolução de Gyarados para Mega Gyarados",
+      image:
+        "https://archives.bulbagarden.net/media/upload/e/ea/Bag_Gyaradosite_Sprite.png",
+      price: 15000,
+      category: "megaStone",
+      effect: {
+        type: "megaEvolution",
+        pokemon: "gyarados",
+        statsBoost: { attack: 30, defense: 20 },
+        typeChange: ["water", "dark"],
+      },
     },
   ];
 

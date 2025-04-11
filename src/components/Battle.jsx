@@ -29,6 +29,10 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
   const [showItemsMenu, setShowItemsMenu] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [showLocationSelector, setShowLocationSelector] = useState(false);
+  const [activeItemTab, setActiveItemTab] = useState("healing");
+  const [megaEvolved, setMegaEvolved] = useState(false);
+  const [canMegaEvolve, setCanMegaEvolve] = useState(false);
+  const [megaEvolutionAnimation, setMegaEvolutionAnimation] = useState(false);
 
   const calculateLevel = (exp) => {
     if (!exp) return 1;
@@ -176,21 +180,176 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
   }, [selectedPokemon, selectedLocation, battleState]);
 
   useEffect(() => {
-    // Add this effect to ensure UI is properly updated after Pokemon selection
     if (selectedPokemon && battleState === "battling") {
-      // Reset turn to player when a new Pokemon is selected
       setCurrentTurn("player");
       setBattleLog((prev) => [...prev, `Vá ${selectedPokemon.name}!`]);
+
+      // Verificar se mega evolução é possível
+      checkMegaEvolution();
     }
   }, [selectedPokemon]);
 
+  useEffect(() => {
+    if (battleState === "selecting") {
+      setMegaEvolved(false);
+    }
+  }, [battleState]);
+
+  const checkMegaEvolution = () => {
+    if (!selectedPokemon || !items || items.length === 0) {
+      setCanMegaEvolve(false);
+      return;
+    }
+
+    const availableMegaStones = items.filter(
+      (item) =>
+        item.category === "megaStone" &&
+        item.effect?.pokemon?.toLowerCase() ===
+          selectedPokemon.name.toLowerCase()
+    );
+
+    setCanMegaEvolve(availableMegaStones.length > 0);
+  };
+
+  const handleMegaEvolution = (megaStone) => {
+    if (!selectedPokemon || megaEvolved || !megaStone) return;
+
+    setMegaEvolutionAnimation(true);
+
+    setTimeout(() => {
+      setMegaEvolutionAnimation(false);
+
+      // Definir a imagem da mega evolução com base no Pokémon e variante
+      let megaImage = selectedPokemon.image;
+
+      if (selectedPokemon.name.toLowerCase() === "charizard") {
+        if (megaStone.effect.variant === "x") {
+          megaImage =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10034.png";
+        } else if (megaStone.effect.variant === "y") {
+          megaImage =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10035.png";
+        }
+      } else if (selectedPokemon.name.toLowerCase() === "mewtwo") {
+        if (megaStone.effect.variant === "x") {
+          megaImage =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10043.png";
+        } else if (megaStone.effect.variant === "y") {
+          megaImage =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10044.png";
+        }
+      } else if (selectedPokemon.name.toLowerCase() === "venusaur") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10033.png";
+      } else if (selectedPokemon.name.toLowerCase() === "blastoise") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10036.png";
+      } else if (selectedPokemon.name.toLowerCase() === "alakazam") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10037.png";
+      } else if (selectedPokemon.name.toLowerCase() === "gengar") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10038.png";
+      } else if (selectedPokemon.name.toLowerCase() === "gyarados") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10041.png";
+      } else if (selectedPokemon.name.toLowerCase() === "lucario") {
+        megaImage =
+          "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10059.png";
+      }
+
+      // Calcular os aumentos de status para a mega evolução
+      const megaBoosts = megaStone.effect.statsBoost || {
+        attack: 20,
+        defense: 20,
+        "special-attack": 20,
+        "special-defense": 20,
+        speed: 10,
+      };
+
+      // Se o Pokémon não tiver stats, criar uma estrutura básica
+      if (!selectedPokemon.stats) {
+        selectedPokemon.stats = [
+          { name: "hp", value: 100 },
+          { name: "attack", value: 80 },
+          { name: "defense", value: 80 },
+          { name: "special-attack", value: 80 },
+          { name: "special-defense", value: 80 },
+          { name: "speed", value: 80 },
+        ];
+      }
+
+      // Criar uma cópia profunda dos stats originais
+      const originalStats = selectedPokemon.stats
+        ? JSON.parse(JSON.stringify(selectedPokemon.stats))
+        : [];
+
+      // Calcular os stats da mega evolução
+      const megaStats = originalStats.map((stat) => {
+        const boost = megaBoosts[stat.name] || 0;
+        return {
+          ...stat,
+          originalValue: stat.value,
+          value: Math.floor(stat.value * (1 + boost / 100)),
+        };
+      });
+
+      // Criar o Pokémon mega evoluído
+      const megaEvolvedPokemon = {
+        ...selectedPokemon,
+        isMega: true,
+        megaVariant: megaStone.effect.variant || "",
+        originalTypes: [...selectedPokemon.types],
+        types: megaStone.effect.typeChange || [...selectedPokemon.types],
+        originalImage: selectedPokemon.image,
+        image: megaImage, // Usar a nova imagem mega
+        originalStats: originalStats,
+        stats: megaStats,
+        megaStats: megaBoosts,
+      };
+
+      // Atualizar log de batalha
+      setBattleLog((prev) => [
+        ...prev,
+        `${selectedPokemon.name} mega evoluiu para Mega ${
+          selectedPokemon.name
+        }${
+          megaStone.effect.variant
+            ? " " + megaStone.effect.variant.toUpperCase()
+            : ""
+        }!`,
+        `Seus atributos aumentaram drasticamente!`,
+      ]);
+
+      // Log dos aumentos de stats para o jogador
+      const statBoostMessages = Object.entries(megaBoosts)
+        .filter(([_, value]) => value > 0)
+        .map(([stat, boost]) => {
+          const statName = stat
+            .split("-")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+          return `${statName} +${boost}%`;
+        });
+
+      if (statBoostMessages.length > 0) {
+        setBattleLog((prev) => [
+          ...prev,
+          `Aumentos: ${statBoostMessages.join(", ")}`,
+        ]);
+      }
+
+      setSelectedPokemon(megaEvolvedPokemon);
+      setMegaEvolved(true);
+      setShowItemsMenu(false);
+
+      setCurrentTurn("player");
+    }, 2000);
+  };
+
   const formatMoveName = (name) => {
     if (!name) return "Ataque";
-
-    // Substituir hifens por espaços
     name = name.replace(/-/g, " ");
-
-    // Capitalizar cada palavra
     return name
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -295,7 +454,6 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
           selectedPokemon.exp || 0
         )}) vs ${enemyPokemon.name} (Nv.${enemyPokemon.level})!`,
       ]);
-
       setBattleState("battling");
     } catch (error) {
       console.error("Error starting battle:", error);
@@ -320,11 +478,28 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
       const coinsReward = Math.floor(baseCoins * coinMultiplier);
 
       if (selectedPokemon) {
+        // Revert mega evolution before updating the Pokémon in inventory
         const updatedPokemon = {
           ...selectedPokemon,
           exp: (selectedPokemon.exp || 0) + totalXP,
           level: calculateLevel((selectedPokemon.exp || 0) + totalXP),
         };
+
+        // Remove mega evolution properties before saving to inventory
+        if (updatedPokemon.isMega) {
+          updatedPokemon.isMega = false;
+          updatedPokemon.image =
+            updatedPokemon.originalImage || updatedPokemon.image;
+          updatedPokemon.types =
+            updatedPokemon.originalTypes || updatedPokemon.types;
+          updatedPokemon.stats =
+            updatedPokemon.originalStats || updatedPokemon.stats;
+          delete updatedPokemon.megaVariant;
+          delete updatedPokemon.originalTypes;
+          delete updatedPokemon.originalImage;
+          delete updatedPokemon.originalStats;
+          delete updatedPokemon.megaStats;
+        }
 
         updatePokemonInInventory(updatedPokemon);
       }
@@ -334,7 +509,11 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
         location: selectedLocation?.name || "Unknown Location",
         playerPokemon: {
           name: selectedPokemon?.name || "Your Pokémon",
-          image: selectedPokemon?.image || "",
+          // Make sure to show the original non-mega image in the summary
+          image:
+            (selectedPokemon?.isMega
+              ? selectedPokemon?.originalImage
+              : selectedPokemon?.image) || "",
           remainingHealth: pokemonHealth?.player || 0,
           expGained: totalXP,
           newLevel: calculateLevel((selectedPokemon?.exp || 0) + totalXP),
@@ -364,7 +543,20 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
     setShowLocationSelector(true);
     setBattleState("selecting");
     setSelectedLocation(null);
-    setSelectedPokemon(null);
+
+    // Reset mega evolution state
+    if (selectedPokemon?.isMega) {
+      setSelectedPokemon({
+        ...selectedPokemon,
+        isMega: false,
+        image: selectedPokemon.originalImage,
+        types: selectedPokemon.originalTypes,
+      });
+    } else {
+      setSelectedPokemon(null);
+    }
+
+    setMegaEvolved(false);
     setOpponent(null);
   };
 
@@ -455,7 +647,6 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
   const handleMoveSelect = async (move) => {
     if (!selectedPokemon || !opponent || currentTurn !== "player") return;
 
-    // Ensure move is defined
     if (!move || !move.name) {
       console.error("Move is undefined", move);
       return;
@@ -488,7 +679,6 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
   const useHealingItem = (item) => {
     if (!selectedPokemon || currentTurn !== "player") return;
 
-    // Verificar se o item é válido
     if (!item || !item.effect) {
       console.error("Item inválido", item);
       return;
@@ -503,11 +693,45 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
       effectText.push(
         `${selectedPokemon.name} recuperou ${healAmount}% de HP!`
       );
+
+      // Consumir o item usado (apenas para itens de cura)
+      const updatedItems = [...items];
+      const itemIndex = updatedItems.findIndex((i) => i.id === item.id);
+
+      if (itemIndex >= 0) {
+        updatedItems[itemIndex].quantity--;
+
+        if (updatedItems[itemIndex].quantity <= 0) {
+          updatedItems.splice(itemIndex, 1);
+        }
+
+        setItems(updatedItems);
+        localStorage.setItem("items", JSON.stringify(updatedItems));
+      }
     } else if (item.effect.type === "revive" && pokemonHealth.player <= 0) {
       newHealth = item.effect.value;
       effectText.push(
         `${selectedPokemon.name} foi revivido com ${item.effect.value}% de HP!`
       );
+
+      // Consumir o item usado (apenas para revives)
+      const updatedItems = [...items];
+      const itemIndex = updatedItems.findIndex((i) => i.id === item.id);
+
+      if (itemIndex >= 0) {
+        updatedItems[itemIndex].quantity--;
+
+        if (updatedItems[itemIndex].quantity <= 0) {
+          updatedItems.splice(itemIndex, 1);
+        }
+
+        setItems(updatedItems);
+        localStorage.setItem("items", JSON.stringify(updatedItems));
+      }
+    } else if (item.effect.type === "megaEvolution") {
+      // Chamar diretamente o handleMegaEvolution que NÃO vai consumir a pedra
+      handleMegaEvolution(item);
+      return;
     } else {
       alert("Este item não pode ser usado agora.");
       return;
@@ -520,24 +744,8 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
 
     setBattleLog((prev) => [...prev, `Você usou ${item.name}!`, ...effectText]);
 
-    // Atualizar inventário de itens
-    const updatedItems = [...items];
-    const itemIndex = updatedItems.findIndex((i) => i.id === item.id);
-
-    if (itemIndex >= 0) {
-      updatedItems[itemIndex].quantity--;
-
-      if (updatedItems[itemIndex].quantity <= 0) {
-        updatedItems.splice(itemIndex, 1);
-      }
-
-      setItems(updatedItems);
-      localStorage.setItem("items", JSON.stringify(updatedItems));
-    }
-
     setShowItemsMenu(false);
 
-    // O oponente ataca após o jogador usar um item
     setTimeout(() => {
       performOpponentAttack();
     }, 1500);
@@ -576,16 +784,62 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
 
     let damage = move.power;
 
+    // Verificar se o movimento é do mesmo tipo que o atacante para bônus STAB
     if (attacker.types.includes(move.type)) {
       damage *= 1.5;
     }
 
+    // Calcular efetividade do tipo
     let effectiveness = 1;
     for (const type of defender.types) {
       effectiveness *= getTypeEffectiveness(move.type, type);
     }
     damage *= effectiveness;
 
+    // Aplicar bônus de mega evolução com base no tipo do ataque
+    if (attacker.isMega) {
+      // Ataques físicos
+      if (
+        [
+          "normal",
+          "fighting",
+          "poison",
+          "ground",
+          "rock",
+          "bug",
+          "ghost",
+          "steel",
+        ].includes(move.type)
+      ) {
+        // Use o valor real do ataque aumentado em vez de uma porcentagem fixa
+        const attackBoost =
+          attacker.stats?.find((s) => s.name === "attack")?.value || 0;
+        const baseAttack =
+          attacker.originalStats?.find((s) => s.name === "attack")?.value || 0;
+
+        if (baseAttack > 0) {
+          damage *= attackBoost / baseAttack;
+        } else {
+          damage *= 1 + (attacker.megaStats?.attack || 0) / 100;
+        }
+      }
+      // Ataques especiais
+      else {
+        const spAttackBoost =
+          attacker.stats?.find((s) => s.name === "special-attack")?.value || 0;
+        const baseSpAttack =
+          attacker.originalStats?.find((s) => s.name === "special-attack")
+            ?.value || 0;
+
+        if (baseSpAttack > 0) {
+          damage *= spAttackBoost / baseSpAttack;
+        } else {
+          damage *= 1 + (attacker.megaStats?.["special-attack"] || 0) / 100;
+        }
+      }
+    }
+
+    // Adicionar aleatoriedade ao dano
     damage *= 0.85 + Math.random() * 0.3;
 
     return Math.floor(damage);
@@ -780,7 +1034,6 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
                 )}
               </div>
             </div>
-
             <div
               className={`bg-white rounded-xl shadow-md transition-all ${
                 selectedPokemon
@@ -898,7 +1151,13 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
                 <div className="flex flex-col items-center">
                   <div className="relative w-full mb-3">
                     <div className="absolute left-0 top-0 bg-gray-100 px-2 py-1 rounded text-xs font-medium text-gray-700 capitalize">
-                      {selectedPokemon.name}
+                      {selectedPokemon.isMega
+                        ? `Mega ${selectedPokemon.name}${
+                            selectedPokemon.megaVariant
+                              ? " " + selectedPokemon.megaVariant.toUpperCase()
+                              : ""
+                          }`
+                        : selectedPokemon.name}
                     </div>
                     <div className="absolute right-0 top-0 bg-blue-100 px-2 py-1 rounded text-xs font-medium text-blue-700">
                       Nível {calculateLevel(selectedPokemon.exp || 0)}
@@ -906,14 +1165,27 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
                   </div>
 
                   <div className="w-40 h-40 flex items-center justify-center relative">
-                    <div className="absolute inset-0 bg-blue-100/50 rounded-full"></div>
+                    <div
+                      className={`absolute inset-0 ${
+                        selectedPokemon.isMega
+                          ? "bg-gradient-to-r from-yellow-100/60 to-orange-100/60"
+                          : "bg-blue-100/50"
+                      } rounded-full`}
+                    ></div>
                     <img
                       src={selectedPokemon.image}
                       alt={selectedPokemon.name}
                       className={`w-36 h-36 object-contain ${
                         currentTurn === "player" ? "animate-float" : ""
-                      } z-10`}
+                      } z-10 ${
+                        selectedPokemon.isMega ? "filter brightness-110" : ""
+                      }`}
                     />
+                    {selectedPokemon.isMega && (
+                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+                        MEGA
+                      </div>
+                    )}
                   </div>
 
                   <div className="w-full mt-4 space-y-2">
@@ -997,15 +1269,27 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
                       <button
                         onClick={() => setShowItemsMenu(true)}
                         className={`py-2.5 px-4 flex items-center justify-center gap-2 rounded-lg transition-colors ${
-                          items.filter((i) => i.category === "healing")
-                            .length === 0
+                          items.filter(
+                            (i) =>
+                              i.category === "healing" ||
+                              (i.category === "megaStone" &&
+                                !megaEvolved &&
+                                i.effect?.pokemon?.toLowerCase() ===
+                                  selectedPokemon.name.toLowerCase())
+                          ).length === 0
                             ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                             : "bg-blue-100 text-blue-800 hover:bg-blue-200"
                         }`}
                         disabled={
                           currentTurn !== "player" ||
-                          items.filter((i) => i.category === "healing")
-                            .length === 0
+                          items.filter(
+                            (i) =>
+                              i.category === "healing" ||
+                              (i.category === "megaStone" &&
+                                !megaEvolved &&
+                                i.effect?.pokemon?.toLowerCase() ===
+                                  selectedPokemon.name.toLowerCase())
+                          ).length === 0
                         }
                       >
                         <FaFlask /> Usar Item
@@ -1106,63 +1390,6 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
                 </div>
               </div>
             )}
-
-            {/* Battle Log */}
-            <div className="mt-6 border-t pt-4">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-gray-700 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                    />
-                  </svg>
-                  Registro de Batalha
-                </h3>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs ${
-                    currentTurn === "player"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  Turno: {currentTurn === "player" ? "Seu turno" : "Oponente"}
-                </span>
-              </div>
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-3 max-h-36 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
-                {battleLog.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">
-                    A batalha começará em breve...
-                  </p>
-                ) : (
-                  <div className="space-y-1">
-                    {battleLog.map((log, index) => (
-                      <p
-                        key={index}
-                        className={`text-sm px-2 py-1 rounded ${
-                          log.includes("causou") || log.includes("Causou")
-                            ? "text-red-700 bg-red-50"
-                            : log.includes("fugiu") || log.includes("errou")
-                            ? "text-amber-700 bg-amber-50"
-                            : log.includes("usou")
-                            ? "text-blue-700 bg-blue-50"
-                            : "text-gray-700"
-                        }`}
-                      >
-                        {log}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -1200,7 +1427,6 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
                     </svg>
                   )}
                 </div>
-
                 <h3
                   className={`text-2xl font-bold mb-1 ${
                     battleSummary.result === "victory"
@@ -1578,66 +1804,172 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
               Selecione um item para usar em {selectedPokemon?.name}:
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 max-h-[300px] overflow-y-auto">
-              {items
-                .filter((item) => item.category === "healing")
-                .map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => useHealingItem(item)}
-                    className="p-3 border rounded-lg hover:border-green-500 hover:bg-green-50 transition-all flex items-center gap-3 text-left"
-                  >
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-10 h-10 object-contain"
-                      />
-                    </div>
-                    <div className="flex-grow">
-                      <h4 className="font-medium text-gray-900">{item.name}</h4>
-                      <p className="text-xs text-gray-600">
-                        {item.description}
-                      </p>
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-xs text-green-600">
-                          +{item.effect.value}% HP
-                        </span>
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                          x{item.quantity}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
+            {/* Abas para tipos de itens */}
+            <div className="flex border-b border-gray-200 mb-4">
+              <button
+                className={`px-4 py-2 border-b-2 ${
+                  activeItemTab === "healing"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500"
+                }`}
+                onClick={() => setActiveItemTab("healing")}
+              >
+                Itens de Cura
+              </button>
+              {canMegaEvolve && !megaEvolved && (
+                <button
+                  className={`px-4 py-2 border-b-2 ${
+                    activeItemTab === "mega"
+                      ? "border-orange-500 text-orange-600"
+                      : "border-transparent text-gray-500"
+                  }`}
+                  onClick={() => setActiveItemTab("mega")}
+                >
+                  Mega Evolução
+                </button>
+              )}
             </div>
 
-            {items.filter((item) => item.category === "healing").length ===
-              0 && (
-              <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg">
-                <div className="w-16 h-16 mx-auto mb-3 flex items-center justify-center bg-gray-100 rounded-full">
-                  <svg
-                    className="w-8 h-8 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-                    />
-                  </svg>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 max-h-[300px] overflow-y-auto">
+              {activeItemTab === "healing" &&
+                items
+                  .filter((item) => item.category === "healing")
+                  .map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => useHealingItem(item)}
+                      className="p-3 border rounded-lg hover:border-green-500 hover:bg-green-50 transition-all flex items-center gap-3 text-left"
+                    >
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-10 h-10 object-contain"
+                        />
+                      </div>
+                      <div className="flex-grow">
+                        <h4 className="font-medium text-gray-900">
+                          {item.name}
+                        </h4>
+                        <p className="text-xs text-gray-600">
+                          {item.description}
+                        </p>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="text-xs text-green-600">
+                            +{item.effect.value}% HP
+                          </span>
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                            x{item.quantity}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+
+              {/* Pedras de Mega Evolução */}
+              {activeItemTab === "mega" &&
+                items
+                  .filter(
+                    (item) =>
+                      item.category === "megaStone" &&
+                      item.effect?.pokemon?.toLowerCase() ===
+                        selectedPokemon.name.toLowerCase()
+                  )
+                  .map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => useHealingItem(item)}
+                      className="p-3 border rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all flex items-center gap-3 text-left"
+                    >
+                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-10 h-10 object-contain"
+                        />
+                      </div>
+                      <div className="flex-grow">
+                        <h4 className="font-medium text-gray-900">
+                          {item.name}
+                        </h4>
+                        <p className="text-xs text-gray-600">
+                          {item.description}
+                        </p>
+                        <div className="flex justify-between items-center mt-1">
+                          {item.effect.statsBoost && (
+                            <span className="text-xs text-orange-600">
+                              Aumento de status
+                            </span>
+                          )}
+                          <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">
+                            x{item.quantity}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+            </div>
+
+            {activeItemTab === "healing" &&
+              items.filter((item) => item.category === "healing").length ===
+                0 && (
+                <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg">
+                  <div className="w-16 h-16 mx-auto mb-3 flex items-center justify-center bg-gray-100 rounded-full">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                      />
+                    </svg>
+                  </div>
+                  <p className="font-medium mb-1">
+                    Nenhum item de cura disponível
+                  </p>
+                  <p className="text-sm">
+                    Visite a loja para comprar itens de cura.
+                  </p>
                 </div>
-                <p className="font-medium mb-1">
-                  Nenhum item de cura disponível
-                </p>
-                <p className="text-sm">
-                  Visite a loja para comprar itens de cura.
-                </p>
-              </div>
-            )}
+              )}
+
+            {activeItemTab === "mega" &&
+              items.filter(
+                (item) =>
+                  item.category === "megaStone" &&
+                  item.effect?.pokemon?.toLowerCase() ===
+                    selectedPokemon.name.toLowerCase()
+              ).length === 0 && (
+                <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg">
+                  <div className="w-16 h-16 mx-auto mb-3 flex items-center justify-center bg-gray-100 rounded-full">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                      />
+                    </svg>
+                  </div>
+                  <p className="font-medium mb-1">
+                    Nenhuma pedra de mega evolução disponível para{" "}
+                    {selectedPokemon.name}
+                  </p>
+                  <p className="text-sm">
+                    Visite a loja para comprar pedras de mega evolução.
+                  </p>
+                </div>
+              )}
 
             <div className="flex justify-end pt-4 border-t border-gray-100 mt-4">
               <button
@@ -1651,10 +1983,38 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
         </div>
       )}
 
-      {/* Add this to your existing CSS file */}
+      {/* Animação de Mega Evolução */}
+      {megaEvolutionAnimation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black opacity-60"></div>
+          <div className="relative z-10 flex flex-col items-center animate-pulse">
+            <div className="w-40 h-40 rounded-full bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 animate-spin-slow"></div>
+            <img
+              src={selectedPokemon.image}
+              alt={selectedPokemon.name}
+              className="absolute w-36 h-36 object-contain animate-bounce-slow"
+            />
+            <div className="text-white text-2xl font-bold mt-8 text-center">
+              MEGA EVOLUÇÃO!
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .text-shadow {
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        @keyframes spin-slow {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 2s linear infinite;
         }
       `}</style>
     </div>

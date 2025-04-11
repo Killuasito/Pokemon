@@ -301,7 +301,7 @@ function Inventory({
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="relative transition-all duration-200 hover:shadow-lg rounded-lg"
+                  className="relative transition-all duration-200 rounded-lg"
                 >
                   <ItemCard
                     item={item}

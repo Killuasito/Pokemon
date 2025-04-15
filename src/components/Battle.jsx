@@ -1881,26 +1881,27 @@ function Battle({ inventory, updateCoins, setInventory, items, setItems }) {
                       onClick={() => useHealingItem(item)}
                       className="p-3 border rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all flex items-center gap-3 text-left"
                     >
-                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                      <div className="w-14 h-14 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex-shrink-0 flex items-center justify-center shadow-sm">
                         <img
                           src={item.image}
                           alt={item.name}
-                          className="w-10 h-10 object-contain"
+                          className="w-12 h-12 object-contain"
                         />
                       </div>
                       <div className="flex-grow">
                         <h4 className="font-medium text-gray-900">
                           {item.name}
                         </h4>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-gray-600 line-clamp-2 mb-1">
                           {item.description}
                         </p>
-                        <div className="flex justify-between items-center mt-1">
-                          {item.effect.statsBoost && (
-                            <span className="text-xs text-orange-600">
-                              Aumento de status
-                            </span>
-                          )}
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2 py-0.5 rounded-full">
+                            Mega {selectedPokemon.name}
+                            {item.effect.variant
+                              ? ` ${item.effect.variant.toUpperCase()}`
+                              : ""}
+                          </span>
                           <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">
                             x{item.quantity}
                           </span>
